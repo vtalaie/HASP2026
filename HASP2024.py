@@ -1,16 +1,15 @@
 from time import sleep
-from turtle import mode
 import numpy
 import cv2
 import zwoasi
 import AsiModule
 import GuiderModule
-import msvcrt
 import threading
 import serial
 import random
 import struct
 import ModeControl
+import keyboard
 
 def randint (min= 0x00, max = 0xFF):
     num = random.randbytes(1)
@@ -76,7 +75,8 @@ command_in = 0
 ModeControl.init_mode_control()
 print(ModeControl.get_system_mode())
 
-serialPort = serial.Serial(port="COM1", baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
+#serialPort = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
+serialPort = serial.Serial(port='/dev/ttyUSB0')
 AsiModule.init_zwo_library()
 num_cameras = AsiModule.get_num_cameras()
 
@@ -88,9 +88,9 @@ stop_input_thread = False
 stop_output_thread = False
 stop_processing_thread = False
     
-input_thread.start()
-processing_thraed.start()
-output_thread.start()
+#input_thread.start()
+#processing_thraed.start()
+#output_thread.start()
 
 while True:
     ModeControl.mode_control_logic()
@@ -98,12 +98,13 @@ while True:
     if status == 0:
         x_err, y_err = GuiderModule.calculate_error(guider_image)
         print(x_err, y_err)
-    if msvcrt.kbhit() and msvcrt.getch().decode() == chr(27):
-        stop_input_thread = True
-        stop_output_thread = True
-        stop_processing_thread = True
-        break
+    #if getch.getch() and getch.getch().decode() == chr(27):
+    #if keyboard.read_key() == 'q':
+    stop_input_thread = True
+    stop_output_thread = True
+    stop_processing_thread = True
+    break
     
 print("Done!")
 
-cv2.destroyAllWindows()
+#cv2.destroyAllWindows()

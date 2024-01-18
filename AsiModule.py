@@ -3,7 +3,7 @@ import cv2
 import numpy
 
 def init_zwo_library():
-    zwoasi.init('.\\ASICamera2_x64.dll')
+    zwoasi.init('/home/vahid/Downloads/ASI_Camera_SDK/ASI_linux_mac_SDK_V1.33/lib/armv8/libASICamera2.so')
     return 0
 
 def get_num_cameras():
