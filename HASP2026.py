@@ -9,7 +9,7 @@ import serial
 import random
 import struct
 import ModeControl
-import keyboard
+#import keyboard
 
 def randint (min= 0x00, max = 0xFF):
     num = random.randbytes(1)
