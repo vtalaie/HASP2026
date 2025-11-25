@@ -3,21 +3,23 @@ import numpy
 import cv2
 import zwoasi
 import AsiModule
+from ClassModeControl import ModeControl
+from ClassModeControl import SystemMode
 import GuiderModule
 import threading
 import serial
 import random
 import struct
-import ModeControl
+import ModeControl_OLD
 #import keyboard
 
 def randint (min= 0x00, max = 0xFF):
     num = random.randbytes(1)
     return num
-randint()
+#randint()
 
-ModeControl.init_mode_control()
-print(ModeControl.get_system_mode())
+#ModeControl.init_mode_control()
+#print(ModeControl.get_system_mode())
 
 def input_module():
     while True:
@@ -26,25 +28,25 @@ def input_module():
         global command_in
         #serialPort.write(b'A')
         #print(serialPort.read(94))
-        bytesread = serialPort.readline()
+        #bytesread = serialPort.readline()
         #print(bytesread)
-        elements = bytesread.decode().split(",")
-        if ((len(elements) > 1) and elements[1] == "$GPGGA"):
-            print ("Data: " + elements[2])
-            #print (elements)
-            #for item in elements:
-            #    print (str(item))
-        elif (elements[0] != ""):
-            print ("Command: " + str(elements[0][2:4]))
-            command_in = int(elements[0][3:4])
-            #print (str(elements[0][2:4]))
-        else:
-            print ("Nothing")    
+        #elements = bytesread.decode().split(",")
+        #if ((len(elements) > 1) and elements[1] == "$GPGGA"):
+        #    print ("Data: " + elements[2])
+        #    #print (elements)
+        #    #for item in elements:
+        #    #    print (str(item))
+        #elif (elements[0] != ""):
+        #    print ("Command: " + str(elements[0][2:4]))
+        #    command_in = int(elements[0][3:4])
+        #    #print (str(elements[0][2:4]))
+        #else:
+        #    print ("Nothing")    
         #for item in elements:
         #    print (str(item))
-        if stop_input_thread:
-            serialPort.close()
-            break
+        #if stop_input_thread:
+        #    serialPort.close()
+         #   break
         #sleep(1.0)
     
 def output_module():
@@ -53,57 +55,75 @@ def output_module():
         global stop_output_thread
         #ba = bytearray(struct.pack("f", randint()))
         #serialPort.write(ba)
-        if (serialPort.is_open):
-            serialPort.write(randint())
-        if stop_output_thread:
-            break
+        #if (serialPort.is_open):
+        #    serialPort.write(randint())
+        #if stop_output_thread:
+        #    break
         sleep(2.0)
     
 def processing_module():
     while True:
         print("Processing\n")
         global command_in
-        print(ModeControl.set_system_mode(command_in))
+        #print(ModeControl.set_system_mode(command_in))
         global stop_processing_thread
         #serialPort.write(b'C')
         if stop_processing_thread:
             break
         sleep(3.0)
 
-command_in = 0
+#command_in = 0
 
-ModeControl.init_mode_control()
-print(ModeControl.get_system_mode())
+
+
+#ModeControl.init_mode_control()
+#print(ModeControl.get_system_mode())
+
+object1 = ModeControl("Value for object 1")
+#object2 = MyClass("Value for object 2")
+
+# Accessing attributes
+print(object1.instance_variable)
+print(object1.currentSystemMode)
+if (object1.currentSystemMode == SystemMode.UNDEFIND):
+    print("Undefined")
+else:
+    print("Unknown")
+
+# There is no way in Python to prevent the following
+object1._ModeControl__currentSystemMode = SystemMode.INIT
+
+print(object1.currentSystemMode)
 
 #serialPort = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
-serialPort = serial.Serial(port='/dev/ttyUSB0')
-AsiModule.init_zwo_library()
-num_cameras = AsiModule.get_num_cameras()
+#serialPort = serial.Serial(port='/dev/ttyUSB0')
+#AsiModule.init_zwo_library()
+#num_cameras = AsiModule.get_num_cameras()
 
-input_thread = threading.Thread(target=input_module, args=())
-processing_thraed = threading.Thread(target=processing_module, args=())
-output_thread = threading.Thread(target=output_module, args=())
+#input_thread = threading.Thread(target=input_module, args=())
+#processing_thraed = threading.Thread(target=processing_module, args=())
+#output_thread = threading.Thread(target=output_module, args=())
 
-stop_input_thread = False
-stop_output_thread = False
-stop_processing_thread = False
+#stop_input_thread = False
+#stop_output_thread = False
+#stop_processing_thread = False
     
 #input_thread.start()
 #processing_thraed.start()
 #output_thread.start()
 
-while True:
-    ModeControl.mode_control_logic()
-    guider_image, status = AsiModule.get_guide_image()
-    if status == 0:
-        x_err, y_err = GuiderModule.calculate_error(guider_image)
-        print(x_err, y_err)
+#while True:
+    #ModeControl.mode_control_logic()
+    #guider_image, status = AsiModule.get_guide_image()
+    #if status == 0:
+    #    x_err, y_err = GuiderModule.calculate_error(guider_image)
+    #    print(x_err, y_err)
     #if getch.getch() and getch.getch().decode() == chr(27):
     #if keyboard.read_key() == 'q':
-    stop_input_thread = True
-    stop_output_thread = True
-    stop_processing_thread = True
-    break
+    #stop_input_thread = True
+    #stop_output_thread = True
+    #stop_processing_thread = True
+    #break
     
 print("Done!")
 

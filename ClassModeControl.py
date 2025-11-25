@@ -12,15 +12,24 @@ class SystemMode(Enum):
 class ModeControl:
     # Class attribute (shared by all instances)
     class_variable = "I am a class variable"
-    currentSystemMode = SystemMode.UNDEFIND
-    previousSystemMode = SystemMode.UNDEFIND
 
     def __init__(self, instance_variable_value):
         # Constructor method: initializes instance attributes
         # 'self' refers to the instance of the class
         self.instance_variable = instance_variable_value
-        currentSystemMode = SystemMode.UNDEFIND
-        previousSystemMode = SystemMode.UNDEFIND
+        self.__currentSystemMode = SystemMode.UNDEFIND
+        self.__previousSystemMode = SystemMode.UNDEFIND
+
+    @property
+    def currentSystemMode(self):
+        return self.__currentSystemMode
+
+    #@currentSystemMode.setter
+    #def currentSystemMode(self, new_value):
+    #    if new_value > 0:
+    #        self._currentSystemMode = new_value
+    #    else:
+    #        raise ValueError("Value must be positive")
 
     def my_method(self):
         # Instance method: operates on instance attributes
@@ -47,15 +56,15 @@ class ModeControl:
 
 
 # Creating instances (objects) of the class
-object1 = MyClass("Value for object 1")
-object2 = MyClass("Value for object 2")
+#object1 = ModeControl("Value for object 1")
+#object2 = MyClass("Value for object 2")
 
 # Accessing attributes
-print(object1.instance_variable)
-print(object2.instance_variable)
-print(MyClass.class_variable) # Accessing class variable via class name
-print(object1.class_variable) # Also accessible via instance
+#print(object1.instance_variable)
+#print(object1.__currentSystemMode)
+#print(MyClass.class_variable) # Accessing class variable via class name
+#print(object1.class_variable) # Also accessible via instance
 
 # Calling methods
-object1.my_method()
-object2.my_method()
+#object1.my_method()
+#object2.my_method()
