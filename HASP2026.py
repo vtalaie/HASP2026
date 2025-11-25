@@ -91,6 +91,8 @@ else:
     print("Unknown")
 
 # There is no way in Python to prevent the following
+# meaning that in Pythom a calss can not have a private member
+
 object1._ModeControl__currentSystemMode = SystemMode.INIT
 
 print(object1.currentSystemMode)
