@@ -3,27 +3,20 @@ import numpy
 import cv2
 import zwoasi
 import AsiModule
-from ClassModeControl import ModeControl
-from ClassModeControl import SystemMode
+from ModeControl import ModeControl
+from ModeControl import SystemMode
 import GuiderModule
 import threading
 import serial
 import random
 import struct
 import ModeControl_OLD
-#import keyboard
+import keyboard
+from getch import getch, pause
 
-def randint (min= 0x00, max = 0xFF):
-    num = random.randbytes(1)
-    return num
-#randint()
-
-#ModeControl.init_mode_control()
-#print(ModeControl.get_system_mode())
-
-def input_module():
+def input_worker_thread():
     while True:
-        #print("Input\n")
+        print("Input\n")
         global stop_input_thread
         global command_in
         #serialPort.write(b'A')
@@ -44,89 +37,64 @@ def input_module():
         #    print ("Nothing")    
         #for item in elements:
         #    print (str(item))
-        #if stop_input_thread:
+        if stop_input_thread:
         #    serialPort.close()
-         #   break
-        #sleep(1.0)
+           break
+        sleep(5.0)
     
-def output_module():
+def output_worker_thread():
     while True:
         print("Output\n")
         global stop_output_thread
-        #ba = bytearray(struct.pack("f", randint()))
         #serialPort.write(ba)
         #if (serialPort.is_open):
         #    serialPort.write(randint())
-        #if stop_output_thread:
-        #    break
-        sleep(2.0)
+        if stop_output_thread:
+            break
+        sleep(5.0)
     
-def processing_module():
+def processing_worker_thread():
     while True:
         print("Processing\n")
         global command_in
-        #print(ModeControl.set_system_mode(command_in))
         global stop_processing_thread
         #serialPort.write(b'C')
         if stop_processing_thread:
             break
-        sleep(3.0)
+        sleep(5.0)
 
-#command_in = 0
-
-
-
-#ModeControl.init_mode_control()
-#print(ModeControl.get_system_mode())
-
-object1 = ModeControl("Value for object 1")
-#object2 = MyClass("Value for object 2")
-
-# Accessing attributes
-print(object1.instance_variable)
-print(object1.currentSystemMode)
-if (object1.currentSystemMode == SystemMode.UNDEFIND):
-    print("Undefined")
-else:
-    print("Unknown")
-
-# There is no way in Python to prevent the following
-# meaning that in Pythom a calss can not have a private member
-
-object1._ModeControl__currentSystemMode = SystemMode.INIT
-
-print(object1.currentSystemMode)
-
+# Initialize the startup conditions
+print("Initializing")
+#serialPort = serial.Serial(port="COM1", baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
 #serialPort = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
-#serialPort = serial.Serial(port='/dev/ttyUSB0')
-#AsiModule.init_zwo_library()
-#num_cameras = AsiModule.get_num_cameras()
+modeControl = ModeControl()
+command_in = 0
 
-#input_thread = threading.Thread(target=input_module, args=())
-#processing_thraed = threading.Thread(target=processing_module, args=())
-#output_thread = threading.Thread(target=output_module, args=())
+# Setup the worker threads
+input_thread = threading.Thread(target=input_worker_thread, args=())
+processing_thraed = threading.Thread(target=processing_worker_thread, args=())
+output_thread = threading.Thread(target=output_worker_thread, args=())
 
-#stop_input_thread = False
-#stop_output_thread = False
-#stop_processing_thread = False
+global stop_input_thread
+global stop_output_thread
+global stop_processing_thread
+
+stop_input_thread = False
+stop_output_thread = False
+stop_processing_thread = False
+
+print("Starting")    
+input_thread.start()
+processing_thraed.start()
+output_thread.start()
+
+while True:
+    modeControl.SystemMCL()
     
-#input_thread.start()
-#processing_thraed.start()
-#output_thread.start()
-
-#while True:
-    #ModeControl.mode_control_logic()
-    #guider_image, status = AsiModule.get_guide_image()
-    #if status == 0:
-    #    x_err, y_err = GuiderModule.calculate_error(guider_image)
-    #    print(x_err, y_err)
-    #if getch.getch() and getch.getch().decode() == chr(27):
-    #if keyboard.read_key() == 'q':
-    #stop_input_thread = True
-    #stop_output_thread = True
-    #stop_processing_thread = True
-    #break
+    key = getch()   # This is a blocking call
+    stop_input_thread = True
+    stop_output_thread = True
+    stop_processing_thread = True
+    break
     
 print("Done!")
-
-#cv2.destroyAllWindows()
