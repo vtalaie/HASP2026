@@ -11,11 +11,9 @@ import serial
 import random
 import struct
 import ModeControl_OLD
-import keyboard
-from getch import getch, pause
+#import keyboard
+from getch import getch
 import sys
-import queue
-import sqlite3
 
 def input_worker_thread():
     while True:
@@ -50,6 +48,7 @@ def input_worker_thread():
         #    serialPort.close()
            break
         sleep(1.0)
+        sleep(1.0)
     
 def output_worker_thread():
     while True:
@@ -63,6 +62,7 @@ def output_worker_thread():
         #    serialPort.write(randint())
         if stop_output_thread:
             break
+        sleep(1.0)
         sleep(1.0)
     
 def processing_worker_thread():
@@ -84,6 +84,7 @@ def processing_worker_thread():
 
         if stop_processing_thread:
             break
+        sleep(1.0)
         sleep(1.0)
 
 # Initialize the startup conditions
@@ -116,8 +117,14 @@ output_thread.start()
 while True:
     modeControl.SystemMCL()
     
+    #key = getch()   # This is a blocking call
+    #print(key)
+    
+    #user_input = input()
+    #print(user_input)
+
     inputchar = sys.stdin.read(1)
-    if (inputchar == "q"):
+    if inputchar == "q":
         stop_input_thread = True
         stop_output_thread = True
         stop_processing_thread = True
