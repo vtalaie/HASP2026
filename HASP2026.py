@@ -14,6 +14,8 @@ import ModeControl_OLD
 #import keyboard
 from getch import getch
 import sys
+import sqlite3
+import queue
 
 def input_worker_thread():
     while True:
@@ -77,7 +79,8 @@ def processing_worker_thread():
         print(sData)
 
         # Add the data in the database
-        with sqlite3.connect("C:\\HASP\\HASP2026\\HASP2026\\HASP2026.sqlite3") as haspDatabase:
+        #with sqlite3.connect("C:\\HASP\\HASP2026\\HASP2026\\HASP2026.sqlite3") as haspDatabase:
+        with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
             cursor = haspDatabase.cursor()
             sqlStatement = "INSERT INTO TestTable (Data) VALUES (?)"
             cursor.execute(sqlStatement, (sData,))
@@ -94,6 +97,11 @@ print("Initializing")
 modeControl = ModeControl()
 command_in = 0
 sensorQueue = queue.Queue(maxsize=10)
+with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
+    cursor = haspDatabase.cursor()
+    sqlStatement = "DELETE FROM TestTable"
+    cursor.execute(sqlStatement)
+
 #haspDatabase = sqlite3.connect("C:\\HASP\\HASP2026\\HASP2026\\HASP2026.sqlite3")
 
 # Setup the worker threads
