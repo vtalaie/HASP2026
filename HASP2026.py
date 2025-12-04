@@ -99,7 +99,9 @@ command_in = 0
 sensorQueue = queue.Queue(maxsize=10)
 with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
     cursor = haspDatabase.cursor()
-    sqlStatement = "DELETE FROM TestTable"
+    sqlStatement = "DROP TABLE IF EXISTS TestTable"
+    cursor.execute(sqlStatement)
+    sqlStatement = "CREATE TABLE IF NOT EXISTS TestTable (ID INTEGER PRIMARY KEY NOT NULL, Data TEXT(1024))"
     cursor.execute(sqlStatement)
 
 #haspDatabase = sqlite3.connect("C:\\HASP\\HASP2026\\HASP2026\\HASP2026.sqlite3")
