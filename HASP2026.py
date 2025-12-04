@@ -11,11 +11,11 @@ import serial
 import random
 import struct
 import ModeControl_OLD
-#import keyboard
 from getch import getch
 import sys
 import sqlite3
 import queue
+from smbus import SMBus
 
 def input_worker_thread():
     while True:
@@ -25,8 +25,12 @@ def input_worker_thread():
         global sensorQueue
 
         # Enqueue sensor data
-        sensorQueue.put("Sensor Data 01")
-        #sensorQueue.put("S")
+        for i in range(3):
+            j = i % 3
+            i2cbus.write_byte_data(i2caddress_2, 0x00, j)
+            byte_list = i2cbus.read_i2c_block_data(i2caddress_2, 0x00, 32)
+            char_array = "".join(chr(byte) for byte in byte_list)
+            sensorQueue.put(char_array)
 
         #serialPort.write(b'A')
         #print(serialPort.read(94))
@@ -50,7 +54,6 @@ def input_worker_thread():
         #    serialPort.close()
            break
         sleep(1.0)
-        sleep(1.0)
     
 def output_worker_thread():
     while True:
@@ -64,7 +67,6 @@ def output_worker_thread():
         #    serialPort.write(randint())
         if stop_output_thread:
             break
-        sleep(1.0)
         sleep(1.0)
     
 def processing_worker_thread():
@@ -88,7 +90,6 @@ def processing_worker_thread():
         if stop_processing_thread:
             break
         sleep(1.0)
-        sleep(1.0)
 
 # Initialize the startup conditions
 print("Initializing")
@@ -97,6 +98,9 @@ print("Initializing")
 modeControl = ModeControl()
 command_in = 0
 sensorQueue = queue.Queue(maxsize=10)
+
+# Setup the database
+#haspDatabase = sqlite3.connect("C:\\HASP\\HASP2026\\HASP2026\\HASP2026.sqlite3")
 with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
     cursor = haspDatabase.cursor()
     sqlStatement = "DROP TABLE IF EXISTS TestTable"
@@ -104,7 +108,10 @@ with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
     sqlStatement = "CREATE TABLE IF NOT EXISTS TestTable (ID INTEGER PRIMARY KEY NOT NULL, Data TEXT(1024))"
     cursor.execute(sqlStatement)
 
-#haspDatabase = sqlite3.connect("C:\\HASP\\HASP2026\\HASP2026\\HASP2026.sqlite3")
+# Setup the I2C communication with prepherals
+i2cbus = SMBus(1)
+i2caddress_1 = 0x2A
+i2caddress_2 = 0x2B
 
 # Setup the worker threads
 input_thread = threading.Thread(target=input_worker_thread, args=())
