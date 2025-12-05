@@ -119,7 +119,7 @@ with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
     cursor = haspDatabase.cursor()
     sqlStatement = "DROP TABLE IF EXISTS TestTable"
     cursor.execute(sqlStatement)
-    sqlStatement = "CREATE TABLE IF NOT EXISTS TestTable (ID INTEGER PRIMARY KEY NOT NULL, Data TEXT(1024))"
+    sqlStatement = "CREATE TABLE IF NOT EXISTS TestTable (ID INTEGER PRIMARY KEY NOT NULL, Data TEXT(48))"
     cursor.execute(sqlStatement)
 
 # Setup the I2C communication with prepherals
