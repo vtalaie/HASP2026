@@ -14,16 +14,16 @@ from smbus import SMBus
 
 def input_worker_thread():
     while True:
-        print("Input\n")
+        #print("Input\n")
         global stop_input_thread
         global command_in
         global sensorQueue
 
         # Enqueue sensor data
-        for i in range(3):
+        for i in range(1):
             j = i % 3
-            i2cbus.write_byte_data(i2caddress_2, 0x00, j)
-            byte_list = i2cbus.read_i2c_block_data(i2caddress_2, 0x00, 32)
+            i2cbus.write_byte_data(i2caddress_3, 0x00, j)
+            byte_list = i2cbus.read_i2c_block_data(i2caddress_3, 0x00, 32)
             char_array = "".join(chr(byte) for byte in byte_list)
             sensorQueue.put(char_array)
 
@@ -56,7 +56,7 @@ def input_worker_thread():
     
 def output_worker_thread():
     while True:
-        print("Output\n")
+        #print("Output\n")
         global stop_output_thread
         global sensorQueue
         global haspDatabase
@@ -72,11 +72,11 @@ def output_worker_thread():
             if serialPort.is_open:
                 serialPort.close()
             break
-        sleep(1.0)
+        #sleep(1.0)
     
 def processing_worker_thread():
     while True:
-        print("Processing\n")
+        #print("Processing\n")
         global command_in
         global stop_processing_thread
 
@@ -100,7 +100,7 @@ def processing_worker_thread():
             if serialPort.is_open:
                 serialPort.close()
             break
-        sleep(1.0)
+        #sleep(1.0)
 
 # Initialize the startup conditions
 print("Initializing")
@@ -108,6 +108,7 @@ print("Initializing")
 # Initialize the serial port
 #serialPort = serial.Serial(port="COM1", baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
 serialPort = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
+serialPort.close()
 
 modeControl = ModeControl()
 command_in = 0
@@ -126,6 +127,7 @@ with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
 i2cbus = SMBus(1)
 i2caddress_1 = 0x2A
 i2caddress_2 = 0x2B
+i2caddress_3 = 0x2C
 
 # Setup the worker threads
 input_thread = threading.Thread(target=input_worker_thread, args=())
