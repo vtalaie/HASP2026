@@ -10,7 +10,7 @@ from getch import getch
 import sys
 import sqlite3
 import queue
-from smbus import SMBus
+from adafruit_extended_bus import ExtendedI2C as I2C
 
 def input_worker_thread():
     while True:
@@ -22,9 +22,21 @@ def input_worker_thread():
         # Enqueue sensor data
         for i in range(1):
             j = i % 3
-            i2cbus.write_byte_data(i2caddress_3, 0x00, j)
-            byte_list = i2cbus.read_i2c_block_data(i2caddress_3, 0x00, 32)
-            char_array = "".join(chr(byte) for byte in byte_list)
+
+            while not i2cbus.try_lock():
+                pass
+            try:
+                register_address = bytes([0x01])
+                i2cbus.writeto(i2caddress_3, register_address)
+
+                result_buffer = bytearray(32)
+                i2cbus.readfrom_into(i2caddress_3, result_buffer)
+            finally:
+                i2cbus.unlock()
+
+            #i2cbus.write_byte_data(i2caddress_3, 0x00, j)
+            #byte_list = i2cbus.read_i2c_block_data(i2caddress_3, 0x00, 32)
+            char_array = "".join(chr(byte) for byte in result_buffer)
             sensorQueue.put(char_array)
 
         if serialPort.is_open:
@@ -124,7 +136,7 @@ with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
     cursor.execute(sqlStatement)
 
 # Setup the I2C communication with prepherals
-i2cbus = SMBus(1)
+i2cbus = I2C(1)
 i2caddress_1 = 0x2A
 i2caddress_2 = 0x2B
 i2caddress_3 = 0x2C
