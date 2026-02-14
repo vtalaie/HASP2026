@@ -29,15 +29,43 @@ def input_worker_thread():
                 register_address = bytes([0x01])
                 i2cbus.writeto(i2caddress_3, register_address)
 
-                result_buffer = bytearray(32)
+                result_buffer = bytearray(2)
                 i2cbus.readfrom_into(i2caddress_3, result_buffer)
+                count = int.from_bytes(result_buffer, byteorder='little')
+                print(count)
+
+                register_address = bytes([0x02])
+                result_buffer = bytearray(4)
+                for i in range(count):
+                    i2cbus.writeto(i2caddress_3, register_address)
+                    i2cbus.readfrom_into(i2caddress_3, result_buffer)
+                    data = int.from_bytes(result_buffer, byteorder='little')
+                    print(data)
+                    sensorQueue.put("GC11," + str(data))
+
+                register_address = bytes([0x03])
+                i2cbus.writeto(i2caddress_3, register_address)
+
+                result_buffer = bytearray(2)
+                i2cbus.readfrom_into(i2caddress_3, result_buffer)
+                count = int.from_bytes(result_buffer, byteorder='little')
+                print(count)
+
+                register_address = bytes([0x04])
+                result_buffer = bytearray(4)
+                for i in range(count):
+                    i2cbus.writeto(i2caddress_3, register_address)
+                    i2cbus.readfrom_into(i2caddress_3, result_buffer)
+                    data = int.from_bytes(result_buffer, byteorder='little')
+                    print(data)
+                    sensorQueue.put("GC12," + str(data))
             finally:
                 i2cbus.unlock()
 
             #i2cbus.write_byte_data(i2caddress_3, 0x00, j)
             #byte_list = i2cbus.read_i2c_block_data(i2caddress_3, 0x00, 32)
-            char_array = "".join(chr(byte) for byte in result_buffer)
-            sensorQueue.put(char_array)
+            #char_array = "".join(chr(byte) for byte in result_buffer)
+            #sensorQueue.put(char_array)
 
         if serialPort.is_open:
             serialPort.write(b'A')
@@ -64,7 +92,7 @@ def input_worker_thread():
            if serialPort.is_open:
                 serialPort.close()
            break
-        sleep(1.0)
+        #sleep(3.0)
     
 def output_worker_thread():
     while True:
@@ -100,13 +128,14 @@ def processing_worker_thread():
         with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
             while not sensorQueue.empty():
                 sData = sensorQueue.get()
-                print(sData)
+                data_list = sData.split(',')
+                #print(sData)
 
                 # Add the data in the database
                 #with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
                 cursor = haspDatabase.cursor()
-                sqlStatement = "INSERT INTO TestTable (Data) VALUES (?)"
-                cursor.execute(sqlStatement, (sData,))
+                sqlStatement = "INSERT INTO TestTable (SensorID, Data) VALUES (?, ?)"
+                cursor.execute(sqlStatement, (data_list[0], data_list[1],))
 
         if stop_processing_thread:
             if serialPort.is_open:
@@ -132,7 +161,7 @@ with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
     cursor = haspDatabase.cursor()
     sqlStatement = "DROP TABLE IF EXISTS TestTable"
     cursor.execute(sqlStatement)
-    sqlStatement = "CREATE TABLE IF NOT EXISTS TestTable (ID INTEGER PRIMARY KEY NOT NULL, Data TEXT(48))"
+    sqlStatement = "CREATE TABLE IF NOT EXISTS TestTable (ID INTEGER PRIMARY KEY NOT NULL, SensorID TEXT(10), Data TEXT(48))"
     cursor.execute(sqlStatement)
 
 # Setup the I2C communication with prepherals
