@@ -11,6 +11,8 @@ import sys
 import sqlite3
 import queue
 from adafruit_extended_bus import ExtendedI2C as I2C
+from SerialComm import SerialComm
+from datetime import datetime, timezone
 
 def input_worker_thread():
     while True:
@@ -32,7 +34,7 @@ def input_worker_thread():
                 result_buffer = bytearray(2)
                 i2cbus.readfrom_into(i2caddress_3, result_buffer)
                 count = int.from_bytes(result_buffer, byteorder='little')
-                print(count)
+                #print(count)
 
                 register_address = bytes([0x02])
                 result_buffer = bytearray(4)
@@ -41,7 +43,7 @@ def input_worker_thread():
                     i2cbus.readfrom_into(i2caddress_3, result_buffer)
                     data = int.from_bytes(result_buffer, byteorder='little')
                     print(data)
-                    sensorQueue.put("GC11," + str(data))
+                    sensorQueue.put("GC11," + str(data) + "," + str(data))
 
                 register_address = bytes([0x03])
                 i2cbus.writeto(i2caddress_3, register_address)
@@ -49,7 +51,7 @@ def input_worker_thread():
                 result_buffer = bytearray(2)
                 i2cbus.readfrom_into(i2caddress_3, result_buffer)
                 count = int.from_bytes(result_buffer, byteorder='little')
-                print(count)
+                #print(count)
 
                 register_address = bytes([0x04])
                 result_buffer = bytearray(4)
@@ -58,7 +60,33 @@ def input_worker_thread():
                     i2cbus.readfrom_into(i2caddress_3, result_buffer)
                     data = int.from_bytes(result_buffer, byteorder='little')
                     print(data)
-                    sensorQueue.put("GC12," + str(data))
+                    sensorQueue.put("GC12," + str(data) + "," + str(data))
+
+                # register_address = bytes([0x05])
+                # i2cbus.writeto(i2caddress_3, register_address)
+                # result_buffer = bytearray(20)
+                # i2cbus.readfrom_into(i2caddress_3, result_buffer)
+                # extracted_portion = result_buffer[0:4]
+                # unpacked_tuple = struct.unpack('<f', extracted_portion)
+                # temperature = unpacked_tuple[0]
+
+                # extracted_portion = result_buffer[4:8]
+                # unpacked_tuple = struct.unpack('<f', extracted_portion)
+                # humidity = unpacked_tuple[0]
+
+                # extracted_portion = result_buffer[8:12]
+                # unpacked_tuple = struct.unpack('<f', extracted_portion)
+                # pressure = unpacked_tuple[0]
+
+                # extracted_portion = result_buffer[12:16]
+                # unpacked_tuple = struct.unpack('<f', extracted_portion)
+                # altitude = unpacked_tuple[0]
+
+                # extracted_portion = result_buffer[16:20]
+                # time = int.from_bytes(extracted_portion, byteorder='little')
+
+                # s = f"{temperature:.2f}" + ":" + f"{humidity:.2f}" + ":" + f"{pressure:.2f}" + ":" + f"{altitude:.2f}" + ":" + str(time)
+                # sensorQueue.put("BME1," + str(time) + "," + s)
             finally:
                 i2cbus.unlock()
 
@@ -67,52 +95,58 @@ def input_worker_thread():
             #char_array = "".join(chr(byte) for byte in result_buffer)
             #sensorQueue.put(char_array)
 
-        if serialPort.is_open:
-            serialPort.write(b'A')
+        #if serialPort.is_open:
+        #    serialPort.write(b'A')
 
-            print(serialPort.read(94))
-            bytesread = serialPort.readline()
-            print(bytesread)
-            elements = bytesread.decode().split(",")
-            if ((len(elements) > 1) and elements[1] == "$GPGGA"):
-                print ("Data: " + elements[2])
-                print (elements)
-                for item in elements:
-                    print (str(item))
-            elif (elements[0] != ""):
-                print ("Command: " + str(elements[0][2:4]))
-                command_in = int(elements[0][3:4])
-                print (str(elements[0][2:4]))
-            else:
-                print ("Nothing")    
-            for item in elements:
-                print (str(item))
+            #print(serialPort.read(94))
+            #bytesread = serialPort.readline()
+            #print(bytesread)
+            #elements = bytesread.decode().split(",")
+            #if ((len(elements) > 1) and elements[1] == "$GPGGA"):
+            #    print ("Data: " + elements[2])
+            #    print (elements)
+            #    for item in elements:
+            #        print (str(item))
+            #elif (elements[0] != ""):
+            #    print ("Command: " + str(elements[0][2:4]))
+            #    command_in = int(elements[0][3:4])
+            #    print (str(elements[0][2:4]))
+            #else:
+            #    print ("Nothing")    
+            #for item in elements:
+            #    print (str(item))
 
         if stop_input_thread:
-           if serialPort.is_open:
-                serialPort.close()
+           #if serialPort.is_open:
+           #     serialPort.close()
            break
-        #sleep(3.0)
+        sleep(1.0)
     
 def output_worker_thread():
+    sleep(1.0)
     while True:
         #print("Output\n")
         global stop_output_thread
         global sensorQueue
         global haspDatabase
+        global serial_comm
 
-        if serialPort.is_open:
-            serialPort.write(b'B')
+        #if serialPort.is_open:
+        #    serialPort.write(b'B')
 
         #serialPort.write(ba)
         #if (serialPort.is_open):
         #    serialPort.write(randint())
 
+        data = bytearray(b"test")
+        if (serial_comm.isOpen):
+            serial_comm.WriteToComm(data)
+
         if stop_output_thread:
-            if serialPort.is_open:
-                serialPort.close()
+        #    if serialPort.is_open:
+        #        serialPort.close()
             break
-        #sleep(1.0)
+        sleep(5.0)
     
 def processing_worker_thread():
     while True:
@@ -120,8 +154,8 @@ def processing_worker_thread():
         global command_in
         global stop_processing_thread
 
-        if serialPort.is_open:
-            serialPort.write(b'C')
+        #if serialPort.is_open:
+        #    serialPort.write(b'C')
 
         # Dequeue sensor data and add them to the database
         #with sqlite3.connect("C:\\HASP\\HASP2026\\HASP2026\\HASP2026.sqlite3") as haspDatabase:
@@ -134,22 +168,129 @@ def processing_worker_thread():
                 # Add the data in the database
                 #with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
                 cursor = haspDatabase.cursor()
-                sqlStatement = "INSERT INTO TestTable (SensorID, Data) VALUES (?, ?)"
-                cursor.execute(sqlStatement, (data_list[0], data_list[1],))
+                sqlStatement = "INSERT INTO TestTable (SensorID, TimeStamp, Data) VALUES (?, ?, ?)"
+                cursor.execute(sqlStatement, (data_list[0], data_list[1], data_list[2],))
 
         if stop_processing_thread:
-            if serialPort.is_open:
-                serialPort.close()
+            #if serialPort.is_open:
+            #    serialPort.close()
             break
         #sleep(1.0)
+
+def serial_comm_worker_thread():
+    global stop_serial_comm_thread
+    global serial_comm
+
+    serial_comm.StartComm()
+
+    while True:
+        print(serial_comm.currentCommand)
+        print(serial_comm.currentPlatformData)
+
+        if stop_serial_comm_thread:
+            serial_comm.StopComm()
+            break
+
+        #sleep(3)
+
+def bme_data_read_worker_thread():
+    global stop_bme_data_read_thread
+    global sensorQueue
+
+    while True:
+        while not i2cbus.try_lock():
+            pass
+        try:
+            print("BME Read")
+
+            register_address = bytes([0x05])
+            i2cbus.writeto(i2caddress_3, register_address)
+            result_buffer = bytearray(20)
+            i2cbus.readfrom_into(i2caddress_3, result_buffer)
+            extracted_portion = result_buffer[0:4]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            temperature = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[4:8]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            humidity = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[8:12]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            pressure = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[12:16]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            altitude = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[16:20]
+            time = int.from_bytes(extracted_portion, byteorder='little')
+
+            s = f"{temperature:.2f}" + ":" + f"{humidity:.2f}" + ":" + f"{pressure:.2f}" + ":" + f"{altitude:.2f}" + ":" + str(time)
+            sensorQueue.put("BME1," + str(time) + "," + s)
+
+            print("RMU Read")
+
+            register_address = bytes([0x06])
+            i2cbus.writeto(i2caddress_3, register_address)
+            result_buffer = bytearray(32)
+            i2cbus.readfrom_into(i2caddress_3, result_buffer)
+            extracted_portion = result_buffer[0:4]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            temperature = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[4:8]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            acceleration_x = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[8:12]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            acceleration_y = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[12:16]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            acceleration_z = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[16:20]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            rotation_x = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[20:24]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            rotation_y = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[24:28]
+            unpacked_tuple = struct.unpack('<f', extracted_portion)
+            rotation_z = unpacked_tuple[0]
+
+            extracted_portion = result_buffer[28:32]
+            time = int.from_bytes(extracted_portion, byteorder='little')
+
+            s = f"{temperature:.2f}" + ":" + f"{acceleration_x:.2f}" + ":" + f"{acceleration_y:.2f}" + ":" + f"{acceleration_z:.2f}" + ":" + f"{rotation_x:.2f}" + ":" + f"{rotation_y:.2f}" + ":" + f"{rotation_z:.2f}" + ":" + str(time)
+            sensorQueue.put("RMU1," + str(time) + "," + s)
+
+        finally:
+            i2cbus.unlock()
+
+        if stop_bme_data_read_thread:
+            break
+        sleep(60)
+
+#def timeout_action(message):
+#    print(f"\n{message}")
+#    t = threading.Timer(5, timeout_action, args=["Time is up!"])
+#    t.start
+#t = threading.Timer(5, timeout_action, args=["Time is up!"])
+#t.start()
+
 
 # Initialize the startup conditions
 print("Initializing")
 
 # Initialize the serial port
 #serialPort = serial.Serial(port="COM1", baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
-serialPort = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
-serialPort.close()
+#serialPort = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, bytesize=8, timeout=5, stopbits=serial.STOPBITS_ONE, parity='N')
+#serialPort.close()
 
 modeControl = ModeControl()
 command_in = 0
@@ -161,8 +302,11 @@ with sqlite3.connect("/home/pi5/HASP2026/HASP2026.sqlite3") as haspDatabase:
     cursor = haspDatabase.cursor()
     sqlStatement = "DROP TABLE IF EXISTS TestTable"
     cursor.execute(sqlStatement)
-    sqlStatement = "CREATE TABLE IF NOT EXISTS TestTable (ID INTEGER PRIMARY KEY NOT NULL, SensorID TEXT(10), Data TEXT(48))"
+    sqlStatement = "CREATE TABLE IF NOT EXISTS TestTable (ID INTEGER PRIMARY KEY NOT NULL, SensorID TEXT(10), TimeStamp TEXT(10), Data TEXT(48))"
     cursor.execute(sqlStatement)
+    current_utc_date_time = datetime.now(timezone.utc)
+    sqlStatement = "INSERT INTO TestTable (SensorID, TimeStamp, Data) VALUES (?, ?, ?)"
+    cursor.execute(sqlStatement, ("PI", "START UP", str(current_utc_date_time)))
 
 # Setup the I2C communication with prepherals
 i2cbus = I2C(1)
@@ -171,22 +315,33 @@ i2caddress_2 = 0x2B
 i2caddress_3 = 0x2C
 
 # Setup the worker threads
+serial_comm_thread = threading.Thread(target=serial_comm_worker_thread, args=())
 input_thread = threading.Thread(target=input_worker_thread, args=())
 processing_thraed = threading.Thread(target=processing_worker_thread, args=())
 output_thread = threading.Thread(target=output_worker_thread, args=())
+bme_data_read_thread = threading.Thread(target=bme_data_read_worker_thread, args=())
 
 global stop_input_thread
 global stop_output_thread
 global stop_processing_thread
+global stop_serial_comm_thread
+global serial_comm
+global stop_bme_data_read_thread
+
+serial_comm = SerialComm()
 
 stop_input_thread = False
 stop_output_thread = False
 stop_processing_thread = False
+stop_serial_comm_thread = False
+stop_bme_data_read_thread = False
 
 print("Starting")    
 input_thread.start()
 processing_thraed.start()
 output_thread.start()
+serial_comm_thread.start()
+bme_data_read_thread.start()
 
 while True:
     modeControl.SystemMCL()
@@ -199,11 +354,12 @@ while True:
     inputchar = sys.stdin.read(1)
     if inputchar == "q":
         sleep(1)
-        if serialPort.is_open:
-            serialPort.close()
+        #if serialPort.is_open:
+        #    serialPort.close()
         stop_input_thread = True
         stop_output_thread = True
         stop_processing_thread = True
+        stop_serial_comm_thread = True
         break
     
 print("Done!")
